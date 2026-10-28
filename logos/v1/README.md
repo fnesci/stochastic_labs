@@ -2,7 +2,7 @@
 
 The Stochastic Labs mark is a rounded die whose pips are joined by a random walk: dice for gaming, a random process for "stochastic".
 
-## Files (`logo/`)
+## Files
 
 | File | Use |
 |---|---|
