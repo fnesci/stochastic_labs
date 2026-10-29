@@ -13,7 +13,7 @@ from fontTools.pens.basePen import BasePen
 import os
 FONTS = os.environ.get("FONT_DIR", "fonts")
 GROTESK = os.path.join(FONTS, "SpaceGrotesk-Bold.ttf")
-MONO = os.path.join(FONTS, "JetBrainsMono-Bold.ttf")
+MONO = os.path.join(FONTS, "JetBrainsMono-ExtraBold.ttf")
 
 P = dict(
     target_width=30.0,   # final overall width in mm
@@ -26,8 +26,9 @@ P = dict(
     mu=10.5, sigma=2.96, d0=2.0, d1=19.0,  # data range mapped onto the curve span
     curve_inset=0.25,    # curve ends inset from baseline ends
     gap_mark_text=1.5,
-    stoch_size=3.15, stoch_track=0.035,   # em
-    labs_size=2.6, labs_track=0.14,      # em
+    word="STOCHASTIC", pairs={"TI": 0.06},
+    stoch_size=2.8107, stoch_track=0.035,   # em; size keeps the word as wide as mixed-case "Stochastic" at 3.15
+    labs_size=2.4, labs_track=0.14,      # em
     line_gap=0.75,       # gap between Stochastic baseline and LABS cap top (mm)
     rule_t=0.32, rule_gap=0.55,
 )
@@ -137,14 +138,16 @@ class LoopPen(BasePen):
         self.loops.append([(x, y, 0) for x, y in c]); self.cur = None
     _endPath = _closePath
 
-def text_loops(font_path, text, size, track_em, x, y):
+def text_loops(font_path, text, size, track_em, x, y, pairs=None):
+    """pairs: extra spacing in em for specific letter pairs, e.g. {"TI": 0.06}."""
     f = TTFont(font_path); gs = f.getGlyphSet(); cm = f.getBestCmap(); upm = f["head"].unitsPerEm
-    s = size / upm; loops = []; cx = x
+    s = size / upm; loops = []; cx = x; pairs = pairs or {}
     for i, ch in enumerate(text):
         gn = cm[ord(ch)]
         pen = LoopPen(gs, s, cx, y); gs[gn].draw(pen); loops += pen.loops
         adv = f["hmtx"][gn][0] * s
-        cx += adv + (track_em * size if i < len(text) - 1 else 0)
+        if i < len(text) - 1:
+            cx += adv + (track_em + pairs.get(text[i:i + 2], 0)) * size
     # tight right edge
     xmax = max(px for l in loops for px, _, _ in l)
     return loops, xmax
@@ -157,7 +160,7 @@ def build(p):
     block_h = cap_g + p["line_gap"] + cap_m
     y_labs = (mark_top - block_h) / 2          # LABS baseline, block centered on the mark
     y_stoch = y_labs + cap_m + p["line_gap"]
-    stoch, sx1 = text_loops(GROTESK, "Stochastic", p["stoch_size"], p["stoch_track"], tx - 0.070 * p["stoch_size"], y_stoch)
+    stoch, sx1 = text_loops(GROTESK, p.get("word","Stochastic"), p["stoch_size"], p["stoch_track"], tx - 0.070 * p["stoch_size"], y_stoch, p.get("pairs"))
     labs, lx1 = text_loops(MONO, "LABS", p["labs_size"], p["labs_track"], tx - 0.095 * p["labs_size"], y_labs)
     r0 = lx1 + p["rule_gap"]; rt = p["rule_t"]; ry = y_labs + cap_m / 2 - rt / 2
     rule = [(r0 + rt / 2, ry, 0), (sx1 - rt / 2, ry, 1.0), (sx1 - rt / 2, ry + rt, 0), (r0 + rt / 2, ry + rt, 1.0)]

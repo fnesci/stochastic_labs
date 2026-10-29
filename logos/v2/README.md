@@ -37,3 +37,7 @@ Both are free on Google Fonts.
 - The lockup SVGs use live text. Install both fonts, or convert the text to outlines (Inkscape: Path → Object to Path; Illustrator: Type → Create Outlines) before sending files to a printer.
 - For screen-printed shirts, use the one-color or reversed versions.
 - Keep clear space around the logo of at least half the mark's height.
+
+## 3D printing
+
+A print-tuned version for Onshape (DXF), with step-by-step printing instructions, is in [`print/`](print).
